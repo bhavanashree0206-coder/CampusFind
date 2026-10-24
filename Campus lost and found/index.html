@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusFind - College Lost & Found Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-location-dot text-xl"></i>
+                </div>
+                <div>
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">Campus<span class="text-indigo-600">Find</span></span>
+                    <span class="hidden sm:inline-block text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-semibold border border-indigo-200 ml-2">College Portal</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Report Problem Button -->
+                <button type="button" onclick="openProblemModal()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 transition">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                    <span>Report Problem</span>
+                </button>
+
+                <!-- Admin View Toggle -->
+                <button type="button" onclick="toggleAdminRole()" class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 transition">
+                    <i class="fa-solid fa-user-shield text-amber-500"></i>
+                    <span id="roleText">View: Student</span>
+                </button>
+
+                <!-- Report Lost/Found Button -->
+                <button type="button" onclick="openReportModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-md hover:shadow-indigo-200 transition flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Report Item
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Hero & Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Reports</p>
+                    <h3 id="statTotal" class="text-2xl font-extrabold text-slate-900 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Lost Items</p>
+                    <h3 id="statLost" class="text-2xl font-extrabold text-rose-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Found Items</p>
+                    <h3 id="statFound" class="text-2xl font-extrabold text-amber-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Returned</p>
+                    <h3 id="statReturned" class="text-2xl font-extrabold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center font-bold text-lg">
+                    <i class="fa-solid fa-handshake"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Section -->
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="md:col-span-1 relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" oninput="renderDashboard()" placeholder="Search item or location..." class="w-full pl-10 pr-4 py-2 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50/50">
+                </div>
+
+                <div>
+                    <select id="typeFilter" onchange="renderDashboard()" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none bg-slate-50/50 text-slate-700">
+                        <option value="ALL">All Report Types</option>
+                        <option value="LOST">Lost Items Only</option>
+                        <option value="FOUND">Found Items Only</option>
+                    </select>
+                </div>
+
+                <div>
+                    <select id="categoryFilter" onchange="renderDashboard()" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none bg-slate-50/50 text-slate-700">
+                        <option value="ALL">All Categories</option>
+                        <option value="Electronics">Electronics & Gadgets</option>
+                        <option value="IDs & Cards">IDs, Wallets & Cards</option>
+                        <option value="Books & Notes">Books & Stationeries</option>
+                        <option value="Keys">Keys & Keychains</option>
+                        <option value="Personal Items">Bottles & Personal Items</option>
+                        <option value="Other">Others</option>
+                    </select>
+                </div>
+
+                <div>
+                    <select id="statusFilter" onchange="renderDashboard()" class="w-full py-2 px-3 text-xs sm:text-sm border border-slate-200 rounded-xl outline-none bg-slate-50/50 text-slate-700">
+                        <option value="ALL">All Statuses</option>
+                        <option value="Active">Active Listing</option>
+                        <option value="Returned">Returned / Claimed</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Problem Reports (Admin View) -->
+        <div id="problemReportsContainer" class="hidden bg-rose-50 border border-rose-200 rounded-2xl p-5 space-y-3">
+            <h3 class="font-bold text-rose-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-bug text-rose-600"></i> Reported Portal Problems & Scams
+            </h3>
+            <div id="problemReportsList" class="space-y-2"></div>
+        </div>
+
+        <!-- Items Grid -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-list text-indigo-600"></i> Campus Reports Feed
+                </h2>
+                <span id="itemCount" class="text-xs text-slate-500 font-semibold">Showing 0 reports</span>
+            </div>
+
+            <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+            <div id="emptyState" class="hidden text-center py-12 bg-white rounded-2xl border border-slate-200">
+                <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-3"></i>
+                <h3 class="font-bold text-slate-700">No matching reports found</h3>
+                <p class="text-xs text-slate-400 mt-1">Try adjusting your filters or search keywords.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal 1: Report Lost/Found Item -->
+    <div id="reportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-indigo-600"></i> Submit Lost or Found Report
+                </h3>
+                <button type="button" onclick="closeReportModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleReportSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Report Type *</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="border border-slate-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="reportType" value="LOST" checked class="accent-rose-600">
+                            <span class="text-xs font-bold text-rose-700">Lost Item</span>
+                        </label>
+                        <label class="border border-slate-200 rounded-xl p-3 flex items-center gap-2 cursor-pointer hover:bg-slate-50">
+                            <input type="radio" name="reportType" value="FOUND" class="accent-amber-600">
+                            <span class="text-xs font-bold text-amber-700">Found Item</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Item Name *</label>
+                    <input type="text" id="itemName" required placeholder="e.g., Blue Water Bottle" class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Category *</label>
+                        <select id="itemCategory" required class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none bg-white">
+                            <option value="Electronics">Electronics & Gadgets</option>
+                            <option value="IDs & Cards">IDs, Wallets & Cards</option>
+                            <option value="Books & Notes">Books & Stationeries</option>
+                            <option value="Keys">Keys & Keychains</option>
+                            <option value="Personal Items">Bottles & Personal Items</option>
+                            <option value="Other">Others</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Date Lost/Found *</label>
+                        <input type="date" id="itemDate" required class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none bg-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Location on Campus *</label>
+                    <input type="text" id="itemLocation" required placeholder="e.g., Library 2nd Floor" class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Image URL (Optional)</label>
+                    <input type="url" id="itemImageUrl" placeholder="https://images.unsplash.com/..." class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Description & Identifying Features *</label>
+                    <textarea id="itemDesc" rows="3" required placeholder="Brand, color, scratches..." class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Your Contact Info *</label>
+                    <input type="text" id="itemContact" required placeholder="student@college.edu" class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeReportModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md">Submit Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 2: Report Problem -->
+    <div id="problemModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Report Problem / Scam
+                </h3>
+                <button type="button" onclick="closeProblemModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleProblemSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Issue Category *</label>
+                    <select id="problemCategory" required class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none bg-white">
+                        <option value="False Claim / Scam">False Ownership Claim / Scam</option>
+                        <option value="Technical Bug">Website Bug / Feature Error</option>
+                        <option value="Inappropriate Content">Inappropriate Listing Content</option>
+                        <option value="Other">Other Issue</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Problem Description *</label>
+                    <textarea id="problemDesc" rows="4" required placeholder="Describe the issue or false claim..." class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Your Contact / Roll No *</label>
+                    <input type="text" id="problemContact" required placeholder="student@college.edu" class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeProblemModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-md">Submit Problem Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal 3: Claim Ownership -->
+    <div id="claimModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-hand text-indigo-600"></i> Submit Ownership Claim
+                </h3>
+                <button type="button" onclick="closeClaimModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <form onsubmit="handleClaimSubmit(event)" class="space-y-4">
+                <input type="hidden" id="claimItemId">
+                <p class="text-xs text-slate-500">
+                    Describe a specific detail or proof of ownership that isn't mentioned in the public listing.
+                </p>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Proof / Secret Feature *</label>
+                    <textarea id="claimProof" rows="3" required placeholder="Blue sticker on back..." class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none resize-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Your Student ID & Contact *</label>
+                    <input type="text" id="claimContact" required placeholder="Roll No: 22CS104" class="w-full text-xs sm:text-sm p-3 border border-slate-200 rounded-xl outline-none">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t">
+                    <button type="button" onclick="closeClaimModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md">Submit Claim</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        const defaultItems = [
+            {
+                id: '1',
+                type: 'LOST',
+                title: 'Blue Milton Water Bottle',
+                category: 'Personal Items',
+                date: '2026-10-22',
+                location: 'Library 2nd Floor Reading Room',
+                imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&q=80',
+                description: 'Stainless steel blue water bottle with a small scratch on the bottom cap.',
+                contact: 'student1@college.edu',
+                status: 'Active',
+                claims: []
+            },
+            {
+                id: '2',
+                type: 'FOUND',
+                title: 'College Student ID Card',
+                category: 'IDs & Cards',
+                date: '2026-10-23',
+                location: 'Canteen Counter',
+                imageUrl: 'https://images.unsplash.com/photo-1578574577315-3fbeb0cecdc2?w=500&q=80',
+                description: 'Found a student ID card belonging to the Computer Science Department.',
+                contact: 'admin@college.edu',
+                status: 'Active',
+                claims: []
+            }
+        ];
+
+        let items = JSON.parse(localStorage.getItem('campusfind_items')) || defaultItems;
+        let problemReports = JSON.parse(localStorage.getItem('campusfind_problems')) || [];
+        let isAdmin = false;
+
+        window.onload = function() {
+            renderDashboard();
+        };
+
+        function saveItems() {
+            localStorage.setItem('campusfind_items', JSON.stringify(items));
+            renderDashboard();
+        }
+
+        function saveProblems() {
+            localStorage.setItem('campusfind_problems', JSON.stringify(problemReports));
+            renderDashboard();
+        }
+
+        // Modal Functions
+        function openReportModal() { document.getElementById('reportModal').classList.remove('hidden'); }
+        function closeReportModal() { document.getElementById('reportModal').classList.add('hidden'); }
+
+        function openProblemModal() { document.getElementById('problemModal').classList.remove('hidden'); }
+        function closeProblemModal() { document.getElementById('problemModal').classList.add('hidden'); }
+
+        function openClaimModal(itemId) {
+            document.getElementById('claimItemId').value = itemId;
+            document.getElementById('claimModal').classList.remove('hidden');
+        }
+        function closeClaimModal() { document.getElementById('claimModal').classList.add('hidden'); }
+
+        function toggleAdminRole() {
+            isAdmin = !isAdmin;
+            document.getElementById('roleText').innerText = isAdmin ? "View: Admin / Staff" : "View: Student";
+            renderDashboard();
+        }
+
+        // Form Submit Handlers
+        function handleReportSubmit(e) {
+            e.preventDefault();
+            const selectedType = document.querySelector('input[name="reportType"]:checked').value;
+            const newItem = {
+                id: Date.now().toString(),
+                type: selectedType,
+                title: document.getElementById('itemName').value,
+                category: document.getElementById('itemCategory').value,
+                date: document.getElementById('itemDate').value,
+                location: document.getElementById('itemLocation').value,
+                imageUrl: document.getElementById('itemImageUrl').value || 'https://images.unsplash.com/photo-1584438784894-089d6a62b8fa?w=500&q=80',
+                description: document.getElementById('itemDesc').value,
+                contact: document.getElementById('itemContact').value,
+                status: 'Active',
+                claims: []
+            };
+
+            items.unshift(newItem);
+            saveItems();
+            e.target.reset();
+            closeReportModal();
+            alert('Item report submitted successfully!');
+        }
+
+        function handleProblemSubmit(e) {
+            e.preventDefault();
+            const newProblem = {
+                id: Date.now().toString(),
+                category: document.getElementById('problemCategory').value,
+                description: document.getElementById('problemDesc').value,
+                contact: document.getElementById('problemContact').value,
+                date: new Date().toLocaleDateString()
+            };
+
+            problemReports.unshift(newProblem);
+            saveProblems();
+            e.target.reset();
+            closeProblemModal();
+            alert('Problem report submitted to campus administrators!');
+        }
+
+        function handleClaimSubmit(e) {
+            e.preventDefault();
+            const itemId = document.getElementById('claimItemId').value;
+            const proof = document.getElementById('claimProof').value;
+            const contact = document.getElementById('claimContact').value;
+
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                item.claims.push({
+                    id: Date.now().toString(),
+                    proof,
+                    contact,
+                    date: new Date().toLocaleDateString()
+                });
+                saveItems();
+                alert('Claim submitted for verification!');
+            }
+            e.target.reset();
+            closeClaimModal();
+        }
+
+        function markReturned(itemId) {
+            const item = items.find(i => i.id === itemId);
+            if (item) {
+                item.status = 'Returned';
+                saveItems();
+            }
+        }
+
+        function deleteItem(itemId) {
+            if (confirm('Are you sure you want to delete this report?')) {
+                items = items.filter(i => i.id !== itemId);
+                saveItems();
+            }
+        }
+
+        function renderDashboard() {
+            document.getElementById('statTotal').innerText = items.length;
+            document.getElementById('statLost').innerText = items.filter(i => i.type === 'LOST' && i.status === 'Active').length;
+            document.getElementById('statFound').innerText = items.filter(i => i.type === 'FOUND' && i.status === 'Active').length;
+            document.getElementById('statReturned').innerText = items.filter(i => i.status === 'Returned').length;
+
+            // Admin Problem Reports Section
+            const probContainer = document.getElementById('problemReportsContainer');
+            const probList = document.getElementById('problemReportsList');
+            if (isAdmin && problemReports.length > 0) {
+                probContainer.classList.remove('hidden');
+                probList.innerHTML = problemReports.map(p => `
+                    <div class="bg-white p-3 rounded-xl border border-rose-200 text-xs text-slate-700 flex justify-between items-start">
+                        <div>
+                            <span class="font-bold text-rose-700">[${p.category}]</span> ${p.description}
+                            <div class="text-[10px] text-slate-400 mt-0.5">By: ${p.contact} | ${p.date}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                probContainer.classList.add('hidden');
+            }
+
+            // Filters
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const filtered = items.filter(item => {
+                const matchesSearch = item.title.toLowerCase().includes(search) || item.location.toLowerCase().includes(search) || item.description.toLowerCase().includes(search);
+                const matchesType = typeFilter === 'ALL' || item.type === typeFilter;
+                const matchesCategory = categoryFilter === 'ALL' || item.category === categoryFilter;
+                const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
+
+                return matchesSearch && matchesType && matchesCategory && matchesStatus;
+            });
+
+            document.getElementById('itemCount').innerText = `Showing ${filtered.length} reports`;
+
+            const grid = document.getElementById('itemsGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="relative h-48 bg-slate-100">
+                            <img src="${item.imageUrl}" alt="${item.title}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 left-3 flex gap-2">
+                                <span class="px-2.5 py-1 text-[10px] font-extrabold tracking-wider uppercase rounded-lg text-white shadow-md ${item.type === 'LOST' ? 'bg-rose-600' : 'bg-amber-600'}">
+                                    ${item.type}
+                                </span>
+                                <span class="px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase rounded-lg text-white shadow-md ${item.status === 'Active' ? 'bg-emerald-600' : 'bg-slate-600'}">
+                                    ${item.status}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="p-5 space-y-3">
+                            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold">
+                                <span><i class="fa-solid fa-folder text-indigo-500 mr-1"></i> ${item.category}</span>
+                                <span><i class="fa-solid fa-calendar mr-1"></i> ${item.date}</span>
+                            </div>
+
+                            <h3 class="font-extrabold text-slate-900 text-base line-clamp-1">${item.title}</h3>
+                            <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${item.description}</p>
+
+                            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-location-dot text-rose-500"></i>
+                                <span class="truncate">${item.location}</span>
+                            </div>
+
+                            ${isAdmin ? `
+                                <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-xs text-amber-800 space-y-1">
+                                    <div class="font-bold flex items-center justify-between">
+                                        <span>Contact:</span>
+                                        <span class="font-mono">${item.contact}</span>
+                                    </div>
+                                    ${item.claims.length > 0 ? `<div class="font-bold text-indigo-700 mt-1">Claims (${item.claims.length}):</div>` : ''}
+                                    ${item.claims.map(c => `<div class="text-[11px] border-t border-amber-200 pt-1 mt-1"><strong>${c.contact}:</strong> ${c.proof}</div>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2">
+                        ${item.status === 'Active' ? `
+                            <button type="button" onclick="openClaimModal('${item.id}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 rounded-xl transition shadow-sm">
+                                <i class="fa-solid fa-hand-holding-hand mr-1"></i> Claim / Contact
+                            </button>
+                        ` : `
+                            <span class="text-xs font-bold text-slate-400 w-full text-center py-1">Item Returned</span>
+                        `}
+
+                        ${isAdmin ? `
+                            <button type="button" onclick="markReturned('${item.id}')" title="Mark as Returned" class="px-3 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-xl text-xs font-bold transition">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button type="button" onclick="deleteItem('${item.id}')" title="Delete" class="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-xl text-xs font-bold transition">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
